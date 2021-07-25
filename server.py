@@ -1,7 +1,10 @@
+from urllib import parse
 from flask import Flask, abort, request, render_template
 from data import data
 import json
 from flask_cors import CORS
+from config import db, parse_json
+
 
 app = Flask(__name__)
 CORS(app)
@@ -40,27 +43,27 @@ def aboutFullName():
 
 @app.route("/api/catalog")
 def getCatalog():
-    return json.dumps(products)
+    cursor = db.products.find({})
+    # establish an empty list for the catalog to exist, add all items in the cursor to a list. curser cant be parsed, a list can
+    catalog = [item for item in cursor]
+    return parse_json(catalog)
 
-# create a POST endpoint
-# to register new products
+# create a POST endpoint to register new products
 
 
 @app.route("/api/catalog", methods=['POST'])
 def saveProd():
     prod = request.get_json()
-    products.append(prod)
-    return json.dumps(prod)
+    db.products.insert(prod)
+    return parse_json(prod)
 
 
 @app.route("/api/catalog/<category>")
 def getProdByCategory(category):
-    # find the products with a specific category
-    results = []
-    for prod in products:
-        if(prod["category"] == category):
-            results.append(prod)
+    data = db.products.find({"category": category})
+    results = [item for item in data]
     return json.dumps(results)
+    # find the products with a specific category
 
 
 @app.route("/api/catalog/id/<id>")
@@ -91,9 +94,9 @@ def cheapestProdList():
 
 @app.route("/api/categories")
 def getCategories():
-
+    data = db.products.find({})
     categories = []
-    for prod in products:
+    for prod in data:
         cat = prod["category"]
         if cat not in categories:
             categories.append(cat)
@@ -103,28 +106,10 @@ def getCategories():
 
 @app.route("/api/test")
 def test():
-    # add
-    products.append("strawberry")
-    products.append("Dragon fruit")
+    test_data = db.test.find({})
+    print(test_data)
 
-    # length
-    # print("You have: " + str(len(products)))
-    print(f"You have: {len(products)} products in your catalog")
-
-    # iterate
-    for fruit in products:
-        print(fruit)
-
-    # print an string 10 times
-    for i in range(0, 10, 1):
-        print(me)
-
-    # remove apple from products
-    products.remove("Apple")
-    # print the list
-    print(products)
-
-    return "Check your terminal"
+    return parse_json(test_data[0])
 
 
 # if __name__ == '__main__':
