@@ -58,6 +58,18 @@ def saveProd():
     return parse_json(prod)
 
 
+@app.route("/api/categories")
+def getCategories():
+    data = db.products.find({})
+    categories = []
+    for prod in data:
+        cat = prod["category"]
+        if cat not in categories:
+            categories.append(cat)
+
+    return json.dumps(categories)
+
+
 @app.route("/api/catalog/<category>")
 def getProdByCategory(category):
     data = db.products.find({"category": category})
@@ -92,18 +104,7 @@ def cheapestProdList():
 """
 
 
-@app.route("/api/categories")
-def getCategories():
-    data = db.products.find({})
-    categories = []
-    for prod in data:
-        cat = prod["category"]
-        if cat not in categories:
-            categories.append(cat)
-
-    return json.dumps(categories)
-
-
+# test function
 @app.route("/api/test")
 def test():
     test_data = db.test.find({})
@@ -111,6 +112,26 @@ def test():
 
     return parse_json(test_data[0])
 
+# discount code logic
+
+
+@app.route("/test/populatecodes")
+def test_populate_codes():
+    db.couponCodes.insert({"code": "qwerty", "discount": 10})
+    db.couponCodes.insert({"code": "yeehaw", "discount": 15})
+    db.couponCodes.insert({"code": "stinger", "discount": 20})
+    db.couponCodes.insert({"code": "hogwarts", "discount": 50})
+
+    return "Codes registered"
+
+
+@app.route("/api/discountcode/<code>")
+def validate_discount(code):
+    data = db.couponCodes.find({"code": code})
+    for code in data:
+        return parse_json(code)
+
+    return parse_json({"error": True, "reason": "invalid code"})
 
 # if __name__ == '__main__':
 #  app.run(debug=True)  # dont deliver to client with debugger on
